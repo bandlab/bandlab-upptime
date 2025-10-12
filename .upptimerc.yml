@@ -1,0 +1,34 @@
+# Upptime configuration for BandLab Upptime Monitoring System
+owner: bandlab
+repo: bandlab-upptime
+user-agent: bandlab
+
+sites:
+  - name: BandLab
+    url: https://www.bandlab.com
+    slug: bandlab
+    maxResponseTime: 5000
+    icon: https://www.bandlab.com/favicon.ico
+
+assignees:
+  - [ADD_GITHUB_USERNAME] # Replace with actual GitHub usernames
+
+status-website:
+  name: BandLab System Status
+  logoUrl: https://www.bandlab.com/favicon.ico
+  cname: status.bandlab.com # Or remove if using GitHub Pages URL
+  introTitle: "**BandLab** system status and uptime monitoring"
+  introMessage: Real-time monitoring of BandLab services powered by Upptime.
+  theme: light
+  navbar:
+    - title: Status
+      href: /
+    - title: BandLab
+      href: https://www.bandlab.com
+    - title: GitHub
+      href: https://github.com/bandlab/bandlab-upptime
+
+workflowSchedule:
+  uptime: "*/5 * * * *"
+  responseTime: "0 23 * * *"
+  staticSite: "0 1 * * *"
