@@ -199,43 +199,109 @@ configure_assignees() {
 configure_pat_secret() {
     echo -e "\n${BLUE}━━━ Step 2: Configure GH_PAT Secret ━━━${NC}"
     
-    # Check if secret exists
+    # Check if secret exists and test if it works
     local secret_exists=false
+    local secret_valid=false
+    
     if gh secret list --repo "${OWNER}/${REPO}" 2>/dev/null | grep -q "^GH_PAT"; then
         secret_exists=true
+        # We can't test the secret directly, but we can check recent workflow runs
+        local last_run_conclusion
+        last_run_conclusion=$(gh run list -R "${OWNER}/${REPO}" --workflow=setup.yml --limit 1 --json conclusion --jq '.[0].conclusion' 2>/dev/null || echo "unknown")
+        if [[ "$last_run_conclusion" == "success" ]]; then
+            secret_valid=true
+        fi
     fi
     
-    if [[ "$secret_exists" == "true" ]]; then
-        success "GH_PAT secret already exists."
-        if ! prompt_yn "  Do you want to update the secret?" "n"; then
+    if [[ "$secret_exists" == "true" && "$secret_valid" == "true" ]]; then
+        success "GH_PAT secret exists and workflows are passing."
+        if ! prompt_yn "  Do you want to update the secret anyway?" "n"; then
             return
         fi
+    elif [[ "$secret_exists" == "true" ]]; then
+        warn "GH_PAT secret exists but workflows are failing (likely bad credentials)."
+        info "You need to provide a new valid token."
     else
         warn "GH_PAT secret not found."
     fi
     
     echo
     info "A Personal Access Token (PAT) is required for Upptime workflows."
-    echo "  Required permissions:"
-    echo "    - repo (Full control of private repositories)"
-    echo "    - workflow (Update GitHub Action workflows)"
     echo
-    info "Generate a token at: https://github.com/settings/tokens/new"
-    echo "  Or use fine-grained tokens with specific repository access."
+    echo "  Required permissions (Classic token):"
+    echo "    ✓ repo     - Full control of private repositories"
+    echo "    ✓ workflow - Update GitHub Action workflows"
+    echo
+    echo "  Generate at: ${YELLOW}https://github.com/settings/tokens/new${NC}"
+    echo
+    echo "  Select expiration: 90 days (or longer)"
+    echo "  Check the boxes for 'repo' and 'workflow' scopes"
     echo
     
-    read -rsp "  Enter your Personal Access Token (input hidden): " pat_value
-    echo
-    
-    if [[ -z "$pat_value" ]]; then
-        warn "No token provided. Skipping secret configuration."
-        return
-    fi
-    
-    # Set the secret
-    echo "$pat_value" | gh secret set GH_PAT --repo "${OWNER}/${REPO}"
-    
-    success "GH_PAT secret configured successfully."
+    # Loop until valid token is provided or user skips
+    local attempts=0
+    while true; do
+        attempts=$((attempts + 1))
+        
+        echo -e "${YELLOW}Enter your Personal Access Token:${NC}"
+        read -rsp "  Token (input is hidden): " pat_value
+        echo
+        
+        if [[ -z "$pat_value" ]]; then
+            if prompt_yn "  No token entered. Skip PAT configuration?" "n"; then
+                warn "Skipping PAT configuration. Workflows will fail until configured."
+                return
+            fi
+            continue
+        fi
+        
+        # Basic validation - classic PATs start with ghp_, fine-grained with github_pat_
+        if [[ ! "$pat_value" =~ ^(ghp_|github_pat_) ]]; then
+            warn "Token doesn't look like a valid GitHub PAT."
+            echo "  Classic tokens start with 'ghp_'"
+            echo "  Fine-grained tokens start with 'github_pat_'"
+            if ! prompt_yn "  Try again?" "y"; then
+                warn "Skipping PAT configuration."
+                return
+            fi
+            continue
+        fi
+        
+        # Set the secret
+        info "Setting GH_PAT secret..."
+        if echo "$pat_value" | gh secret set GH_PAT --repo "${OWNER}/${REPO}" 2>/dev/null; then
+            success "GH_PAT secret configured successfully!"
+            
+            # Offer to test by triggering a workflow
+            if prompt_yn "  Trigger a test workflow to verify the token?" "y"; then
+                info "Triggering Setup CI workflow..."
+                if gh workflow run setup.yml -R "${OWNER}/${REPO}" 2>/dev/null; then
+                    success "Workflow triggered. Waiting 15 seconds to check result..."
+                    sleep 15
+                    
+                    local test_result
+                    test_result=$(gh run list -R "${OWNER}/${REPO}" --workflow=setup.yml --limit 1 --json conclusion,status --jq '.[0] | if .status == "completed" then .conclusion else .status end' 2>/dev/null || echo "unknown")
+                    
+                    if [[ "$test_result" == "success" ]]; then
+                        success "Token verified! Workflows are working."
+                    elif [[ "$test_result" == "in_progress" || "$test_result" == "queued" ]]; then
+                        info "Workflow still running. Check status at:"
+                        echo "  https://github.com/${OWNER}/${REPO}/actions"
+                    else
+                        warn "Workflow result: $test_result"
+                        echo "  Check logs at: https://github.com/${OWNER}/${REPO}/actions"
+                    fi
+                else
+                    warn "Could not trigger workflow. Check manually at:"
+                    echo "  https://github.com/${OWNER}/${REPO}/actions"
+                fi
+            fi
+            return
+        else
+            error "Failed to set secret. Check your GitHub CLI authentication."
+            return
+        fi
+    done
 }
 
 # Step 3: Enable GitHub Pages
