@@ -1,7 +1,5 @@
 # Upptime Site Workflow
 name: Site CI
-permissions:
-  contents: write
 on:
   schedule:
     - cron: '0 1 * * *'
@@ -13,6 +11,8 @@ on:
 jobs:
   build-site:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # required to push to gh-pages
     steps:
       - uses: actions/checkout@v3
       - name: Build status page
