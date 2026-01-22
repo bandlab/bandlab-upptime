@@ -7,6 +7,14 @@
 #   - GitHub CLI (gh) installed and authenticated
 #   - git installed and configured
 #   - yq installed (for YAML parsing) - will attempt to install if missing
+#   - jq installed (for JSON parsing) - will attempt to install if missing
+#   - curl installed (for API calls)
+#
+# Required PAT Permissions (Classic Token):
+#   - repo     : Full control of private repositories (read/write contents, issues)
+#   - workflow : Update GitHub Action workflows
+#
+# Generate token at: https://github.com/settings/tokens/new
 #
 # Usage: ./scripts/setup-upptime.sh
 #
@@ -18,6 +26,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
@@ -25,6 +34,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UPPTIMERC_FILE="${REPO_ROOT}/.upptimerc.yml"
 OWNER="bandlab"
 REPO="bandlab-upptime"
+
+# Required PAT scopes - exactly these, no more, no less
+REQUIRED_SCOPES=("repo" "workflow")
 
 # Helper functions
 info() { echo -e "${BLUE}ℹ${NC} $1"; }
@@ -44,6 +56,133 @@ prompt_yn() {
         answer="${answer:-n}"
     fi
     [[ "${answer,,}" == "y" ]]
+}
+
+# Validate PAT permissions
+# Returns: 0 if valid, 1 if invalid
+# Sets: PAT_SCOPES (array of scopes), PAT_ERROR (error message if invalid)
+validate_pat_permissions() {
+    local token="$1"
+    PAT_SCOPES=()
+    PAT_ERROR=""
+    
+    # Query GitHub API to get token scopes from response headers
+    local response_headers
+    response_headers=$(curl -sI -H "Authorization: token $token" \
+        -H "Accept: application/vnd.github+json" \
+        "https://api.github.com/user" 2>&1)
+    
+    # Check for authentication error
+    if echo "$response_headers" | grep -q "HTTP/[0-9.]* 401"; then
+        PAT_ERROR="Invalid token - authentication failed (401 Unauthorized)"
+        return 1
+    fi
+    
+    if echo "$response_headers" | grep -q "HTTP/[0-9.]* 403"; then
+        PAT_ERROR="Token forbidden - may be expired or revoked (403 Forbidden)"
+        return 1
+    fi
+    
+    # Extract X-OAuth-Scopes header (contains comma-separated scopes)
+    local scopes_header
+    scopes_header=$(echo "$response_headers" | grep -i "^x-oauth-scopes:" | sed 's/^[^:]*: //' | tr -d '\r')
+    
+    if [[ -z "$scopes_header" ]]; then
+        # Fine-grained tokens don't have X-OAuth-Scopes, check differently
+        if echo "$response_headers" | grep -q "HTTP/[0-9.]* 200"; then
+            PAT_ERROR="Fine-grained token detected. Please use a Classic token with 'repo' and 'workflow' scopes."
+            return 1
+        fi
+        PAT_ERROR="Could not determine token scopes"
+        return 1
+    fi
+    
+    # Parse scopes into array
+    IFS=', ' read -ra PAT_SCOPES <<< "$scopes_header"
+    
+    # Normalize scopes (trim whitespace)
+    local normalized_scopes=()
+    for scope in "${PAT_SCOPES[@]}"; do
+        scope=$(echo "$scope" | xargs)
+        if [[ -n "$scope" ]]; then
+            normalized_scopes+=("$scope")
+        fi
+    done
+    PAT_SCOPES=("${normalized_scopes[@]}")
+    
+    return 0
+}
+
+# Check if PAT has exactly the required scopes
+check_exact_scopes() {
+    local missing_scopes=()
+    local extra_scopes=()
+    
+    # Check for missing required scopes
+    for required in "${REQUIRED_SCOPES[@]}"; do
+        local found=false
+        for scope in "${PAT_SCOPES[@]}"; do
+            if [[ "$scope" == "$required" ]]; then
+                found=true
+                break
+            fi
+        done
+        if [[ "$found" == "false" ]]; then
+            missing_scopes+=("$required")
+        fi
+    done
+    
+    # Check for extra scopes (security concern)
+    for scope in "${PAT_SCOPES[@]}"; do
+        local is_required=false
+        for required in "${REQUIRED_SCOPES[@]}"; do
+            if [[ "$scope" == "$required" ]]; then
+                is_required=true
+                break
+            fi
+        done
+        if [[ "$is_required" == "false" ]]; then
+            extra_scopes+=("$scope")
+        fi
+    done
+    
+    # Report results
+    if [[ ${#missing_scopes[@]} -gt 0 ]]; then
+        error "Missing required scopes: ${missing_scopes[*]}"
+        return 1
+    fi
+    
+    if [[ ${#extra_scopes[@]} -gt 0 ]]; then
+        warn "Token has extra scopes (security risk): ${extra_scopes[*]}"
+        echo
+        echo "  For least-privilege security, create a new token with ONLY:"
+        echo "    ✓ repo"
+        echo "    ✓ workflow"
+        echo
+        if ! prompt_yn "  Accept token with extra permissions anyway?" "n"; then
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Display PAT scope information
+display_scope_info() {
+    echo
+    echo -e "${CYAN}━━━ Required PAT Permissions ━━━${NC}"
+    echo
+    echo "  Generate a Classic token at:"
+    echo -e "  ${YELLOW}https://github.com/settings/tokens/new${NC}"
+    echo
+    echo "  Required scopes (check ONLY these boxes):"
+    echo -e "    ${GREEN}☑${NC} repo     - Full control of private repositories"
+    echo -e "    ${GREEN}☑${NC} workflow - Update GitHub Action workflows"
+    echo
+    echo "  Do NOT select additional scopes (least-privilege principle)"
+    echo
+    echo "  Recommended expiration: 90 days"
+    echo
 }
 
 # Check prerequisites
@@ -80,6 +219,23 @@ check_prerequisites() {
             error "Cannot install yq. Please install manually: brew install yq"
             exit 1
         fi
+    fi
+    
+    # Check/install jq for JSON parsing
+    if ! command -v jq &> /dev/null; then
+        warn "jq is not installed. Attempting to install..."
+        if command -v brew &> /dev/null; then
+            brew install jq
+        else
+            error "Cannot install jq. Please install manually: brew install jq"
+            exit 1
+        fi
+    fi
+    
+    # Check curl
+    if ! command -v curl &> /dev/null; then
+        error "curl is not installed."
+        exit 1
     fi
     
     # Check if .upptimerc.yml exists
@@ -219,29 +375,23 @@ configure_pat_secret() {
             return
         fi
     elif [[ "$secret_exists" == "true" ]]; then
-        warn "GH_PAT secret exists but workflows are failing (likely bad credentials)."
-        info "You need to provide a new valid token."
+        warn "GH_PAT secret exists but workflows are failing (likely bad credentials or wrong permissions)."
+        info "You need to provide a new valid token with correct permissions."
     else
         warn "GH_PAT secret not found."
     fi
     
-    echo
-    info "A Personal Access Token (PAT) is required for Upptime workflows."
-    echo
-    echo "  Required permissions (Classic token):"
-    echo "    ✓ repo     - Full control of private repositories"
-    echo "    ✓ workflow - Update GitHub Action workflows"
-    echo
-    echo "  Generate at: ${YELLOW}https://github.com/settings/tokens/new${NC}"
-    echo
-    echo "  Select expiration: 90 days (or longer)"
-    echo "  Check the boxes for 'repo' and 'workflow' scopes"
-    echo
+    # Display required permissions
+    display_scope_info
     
     # Loop until valid token is provided or user skips
     local attempts=0
     while true; do
         attempts=$((attempts + 1))
+        
+        if [[ $attempts -gt 1 ]]; then
+            echo
+        fi
         
         echo -e "${YELLOW}Enter your Personal Access Token:${NC}"
         read -rsp "  Token (input is hidden): " pat_value
@@ -255,17 +405,52 @@ configure_pat_secret() {
             continue
         fi
         
-        # Basic validation - classic PATs start with ghp_, fine-grained with github_pat_
-        if [[ ! "$pat_value" =~ ^(ghp_|github_pat_) ]]; then
-            warn "Token doesn't look like a valid GitHub PAT."
-            echo "  Classic tokens start with 'ghp_'"
-            echo "  Fine-grained tokens start with 'github_pat_'"
-            if ! prompt_yn "  Try again?" "y"; then
+        # Basic format validation
+        if [[ "$pat_value" =~ ^github_pat_ ]]; then
+            error "Fine-grained tokens are not supported."
+            echo "  Upptime requires a Classic token with 'repo' and 'workflow' scopes."
+            echo "  Generate at: https://github.com/settings/tokens/new"
+            if ! prompt_yn "  Try again with a Classic token?" "y"; then
                 warn "Skipping PAT configuration."
                 return
             fi
             continue
         fi
+        
+        if [[ ! "$pat_value" =~ ^ghp_ ]]; then
+            warn "Token doesn't look like a valid GitHub Classic PAT."
+            echo "  Classic tokens start with 'ghp_'"
+            if ! prompt_yn "  Try anyway?" "n"; then
+                continue
+            fi
+        fi
+        
+        # Validate token permissions
+        info "Validating token permissions..."
+        if ! validate_pat_permissions "$pat_value"; then
+            error "$PAT_ERROR"
+            if ! prompt_yn "  Try again with a different token?" "y"; then
+                warn "Skipping PAT configuration."
+                return
+            fi
+            continue
+        fi
+        
+        # Check for exact required scopes
+        success "Token is valid. Checking scopes..."
+        echo "  Detected scopes: ${PAT_SCOPES[*]}"
+        echo "  Required scopes: ${REQUIRED_SCOPES[*]}"
+        echo
+        
+        if ! check_exact_scopes; then
+            if ! prompt_yn "  Try again with a correctly scoped token?" "y"; then
+                warn "Skipping PAT configuration."
+                return
+            fi
+            continue
+        fi
+        
+        success "Token has correct permissions!"
         
         # Set the secret
         info "Setting GH_PAT secret..."
@@ -273,17 +458,17 @@ configure_pat_secret() {
             success "GH_PAT secret configured successfully!"
             
             # Offer to test by triggering a workflow
-            if prompt_yn "  Trigger a test workflow to verify the token?" "y"; then
+            if prompt_yn "  Trigger a test workflow to verify everything works?" "y"; then
                 info "Triggering Setup CI workflow..."
                 if gh workflow run setup.yml -R "${OWNER}/${REPO}" 2>/dev/null; then
-                    success "Workflow triggered. Waiting 15 seconds to check result..."
-                    sleep 15
+                    success "Workflow triggered. Waiting 20 seconds to check result..."
+                    sleep 20
                     
                     local test_result
                     test_result=$(gh run list -R "${OWNER}/${REPO}" --workflow=setup.yml --limit 1 --json conclusion,status --jq '.[0] | if .status == "completed" then .conclusion else .status end' 2>/dev/null || echo "unknown")
                     
                     if [[ "$test_result" == "success" ]]; then
-                        success "Token verified! Workflows are working."
+                        success "Token verified! Workflows are working correctly."
                     elif [[ "$test_result" == "in_progress" || "$test_result" == "queued" ]]; then
                         info "Workflow still running. Check status at:"
                         echo "  https://github.com/${OWNER}/${REPO}/actions"
