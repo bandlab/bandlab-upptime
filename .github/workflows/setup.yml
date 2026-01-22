@@ -1,5 +1,7 @@
 # Upptime Setup Workflow
 name: Setup CI
+permissions:
+  contents: write
 on:
   push:
     branches:

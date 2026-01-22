@@ -1,5 +1,7 @@
 # Upptime Site Workflow
 name: Site CI
+permissions:
+  contents: write
 on:
   schedule:
     - cron: '0 1 * * *'
