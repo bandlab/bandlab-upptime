@@ -9,6 +9,11 @@ sites:
     slug: bandlab
     maxResponseTime: 5000
     icon: https://www.bandlab.com/favicon.ico
+  # - name: [Add more targets here]
+  #   url: https://example.com
+  #   slug: example
+  #   maxResponseTime: 5000
+  #   icon: https://example.com/favicon.ico
 
 assignees:
   - [ADD_GITHUB_USERNAME] # Replace with actual GitHub usernames
@@ -28,7 +33,17 @@ status-website:
     - title: GitHub
       href: https://github.com/bandlab/bandlab-upptime
 
+# To further customize theme, logo, and intro text, see Upptime docs:
+# https://upptime.js.org/docs/status-website/
+
 workflowSchedule:
   uptime: "*/5 * * * *"
   responseTime: "0 23 * * *"
   staticSite: "0 1 * * *"
+
+# notifications:
+#   slack:
+#     webhookUrl: ${{ secrets.SLACK_WEBHOOK_URL }}
+#   email:
+#     to: team@bandlab.com
+#     from: status@bandlab.com

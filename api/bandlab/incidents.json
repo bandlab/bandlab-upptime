@@ -1,0 +1,28 @@
+[
+  {
+    "id": 67,
+    "title": "🚨 BandLab is down",
+    "start": "2025-10-12T11:00:00Z",
+    "end": "2025-10-12T11:15:00Z",
+    "duration": 900000,
+  "status": "resolved",
+    "updates": [
+      {
+        "timestamp": "2025-10-12T11:02:00Z",
+        "message": "Investigating: We're currently investigating the cause of this outage."
+      },
+      {
+        "timestamp": "2025-10-12T11:10:00Z",
+        "message": "Identified: Issue with upstream provider."
+      },
+      {
+        "timestamp": "2025-10-12T11:15:00Z",
+        "message": "Resolved: Service restored."
+      },
+      {
+        "timestamp": "2025-10-12T11:15:00Z",
+        "message": "BandLab.com has recovered and is back online."
+      }
+    ]
+  }
+]

@@ -1,12 +1,7 @@
 {
-  "uptimeDay": 100.0,
-  "uptimeWeek": 99.95,
-  "uptimeMonth": 99.89,
-  "uptimeYear": 99.92,
-  "time": {
-    "day": 1234,
-    "week": 1456,
-    "month": 1523,
-    "year": 1445
-  }
+  "url": "https://www.bandlab.com",
+  "status": "up",
+  "code": 200,
+  "responseTime": 1100,
+  "checkedAt": "2025-10-12T11:15:00.000Z"
 }
