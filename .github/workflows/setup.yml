@@ -3,7 +3,8 @@ name: Setup CI
 on:
   push:
     branches:
-      - main
+      - master
+      - 001-use-upptime-https
   workflow_dispatch:
 jobs:
   setup:

@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - master
+      - 001-use-upptime-https
 jobs:
   build-site:
     runs-on: ubuntu-latest

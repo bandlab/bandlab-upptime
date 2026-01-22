@@ -20,7 +20,7 @@ assignees:
 status-website:
   name: BandLab System Status
   logoUrl: https://www.bandlab.com/favicon.ico
-  cname: status.bandlab.com # Or remove if using GitHub Pages URL
+  cname: upptime.bandlab.com
   introTitle: "**BandLab** system status and uptime monitoring"
   introMessage: Real-time monitoring of BandLab services powered by Upptime.
   theme: light
@@ -46,3 +46,4 @@ workflowSchedule:
 #   email:
 #     to: team@bandlab.com
 #     from: status@bandlab.com
+
