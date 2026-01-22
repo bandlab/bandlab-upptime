@@ -21,3 +21,10 @@ jobs:
           command: site
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Deploy status page
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          publish_branch: gh-pages
+          publish_dir: site/__sapper__/export
+          cname: upptime.bandlab.com
