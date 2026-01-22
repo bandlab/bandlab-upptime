@@ -36,15 +36,6 @@ Automates the manual configuration steps:
 - GitHub CLI (`gh`) installed and authenticated
 - `yq`, `jq`, `curl` installed
 
-**PAT Requirements (Fine-grained token):**
-- Actions: Read and write
-- Contents: Read and write
-- Issues: Read and write
-- Metadata: Read
-- Workflows: Read and write
-
-See [docs/PAT-REQUIREMENTS.md](docs/PAT-REQUIREMENTS.md) for detailed token setup instructions.
-
 ---
 
 ### `scripts/configure-dns.sh`
@@ -72,10 +63,100 @@ Configures AWS Route 53 DNS to point `upptime.bandlab.com` to GitHub Pages.
 
 ---
 
-## Maintenance
+## GitHub Personal Access Token (PAT)
 
-- **PAT Rotation:** Review and rotate the GitHub Personal Access Token (`GH_PAT`) before expiration. Run `./scripts/setup-upptime.sh` to update.
-- **Incident Review:** Check incident history for accuracy after outages.
+### Token Type
+
+**Use a Fine-grained Personal Access Token** (recommended for better security).
+
+Fine-grained tokens allow scoping to a single repository with specific permissions.
+
+### Required Permissions
+
+| Permission | Access Level | Why Required |
+|------------|--------------|--------------|
+| **Actions** | Read and write | Trigger and manage workflow runs |
+| **Contents** | Read and write | Update status files, graphs, API data |
+| **Issues** | Read and write | Create incident issues when sites go down |
+| **Metadata** | Read | Required for repository access (auto-selected) |
+| **Workflows** | Read and write | Update workflow files when Upptime updates |
+
+### Generating the Token
+
+1. Go to **[Fine-grained Token Settings](https://github.com/settings/personal-access-tokens/new)**
+
+2. Configure:
+   - **Token name**: `BandLab Upptime Monitor`
+   - **Expiration**: 90 days (recommended)
+   - **Resource owner**: `bandlab`
+   - **Repository access**: "Only select repositories" → `bandlab-upptime`
+
+3. Set **Permissions** (Repository permissions):
+   - Actions: Read and write
+   - Contents: Read and write
+   - Issues: Read and write
+   - Metadata: Read (auto-selected)
+   - Workflows: Read and write
+
+4. Click **Generate token**
+
+5. **Copy the token immediately** (it won't be shown again)
+
+### Setting the Secret
+
+**Using the setup script (recommended):**
+```bash
+./scripts/setup-upptime.sh
+```
+
+The script will:
+- Detect token type (fine-grained or classic)
+- Validate token has correct permissions
+- Test repository access
+- Set the `GH_PAT` secret
+- Trigger a test workflow
+
+**Manual setup:**
+```bash
+gh secret set GH_PAT -R bandlab/bandlab-upptime
+# Paste your token when prompted
+```
+
+### Token Rotation
+
+Tokens should be rotated before expiration:
+
+1. Generate a new token with the same permissions
+2. Run `./scripts/setup-upptime.sh` to update
+3. Delete the old token from [Token Settings](https://github.com/settings/tokens?type=beta)
+
+### Classic Tokens (Alternative)
+
+If you prefer classic tokens, they also work:
+
+1. Go to https://github.com/settings/tokens/new
+2. Select scopes: `repo` and `workflow`
+3. The script will accept classic tokens but recommend fine-grained
+
+### Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| "Bad credentials" | Token is invalid, expired, or revoked. Generate a new token. |
+| "Resource not accessible" | Token missing permissions. Regenerate with all required permissions. |
+| Permission test failures | Ensure "Read and write" for Contents, Issues, Actions, Workflows. |
+
+### Verification
+
+After setting the token, verify it works:
+
+```bash
+# Check workflow status
+gh run list -R bandlab/bandlab-upptime --limit 3
+
+# Manually trigger a workflow
+gh workflow run setup.yml -R bandlab/bandlab-upptime
+```
 
 ---
 
@@ -87,7 +168,6 @@ The monitoring configuration is in [.upptimerc.yml](.upptimerc.yml):
 - Status page customization
 - Incident assignees
 
-## Documentation
+## External Documentation
 
-- [PAT Requirements](docs/PAT-REQUIREMENTS.md) - Token setup guide
 - [Upptime Docs](https://upptime.js.org/docs/) - Official Upptime documentation
