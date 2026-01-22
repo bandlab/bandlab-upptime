@@ -4,48 +4,47 @@ This document describes the exact permissions required for the BandLab Upptime m
 
 ## Token Type
 
-**Use a Classic Personal Access Token** (not Fine-Grained).
+**Use a Fine-grained Personal Access Token** (recommended for better security).
 
-Fine-grained tokens are not supported by Upptime because they cannot access the `upptime/uptime-monitor` action's release API.
+Fine-grained tokens allow scoping to a single repository with specific permissions.
 
-## Required Scopes
+## Required Permissions
 
-The PAT must have **exactly** these scopes:
+The PAT must have these repository permissions:
 
-| Scope | Description | Why Required |
-|-------|-------------|--------------|
-| `repo` | Full control of private repositories | Read/write repository contents, create issues for incidents, update status data |
-| `workflow` | Update GitHub Action workflows | Allow Upptime to update its own workflow files |
+| Permission | Access Level | Why Required |
+|------------|--------------|--------------|
+| **Actions** | Read and write | Trigger and manage workflow runs |
+| **Contents** | Read and write | Update status files, graphs, API data |
+| **Issues** | Read and write | Create incident issues when sites go down |
+| **Metadata** | Read | Required for repository access (auto-selected) |
+| **Workflows** | Read and write | Update workflow files when Upptime updates |
 
 ## Security: Least Privilege
 
-⚠️ **Do NOT add additional scopes** beyond `repo` and `workflow`.
-
-Extra scopes increase security risk without benefit:
-- ❌ `admin:org` - Not needed
-- ❌ `admin:repo_hook` - Not needed  
-- ❌ `delete_repo` - Not needed
-- ❌ `gist` - Not needed
-- ❌ `notifications` - Not needed
-- ❌ `user` - Not needed
-- ❌ `write:packages` - Not needed
-
-The setup script will warn if your token has extra permissions.
+Fine-grained tokens are scoped to a single repository, so they're inherently more secure than classic tokens.
 
 ## Generating the Token
 
-1. Go to **[GitHub Token Settings](https://github.com/settings/tokens/new)**
+1. Go to **[Fine-grained Token Settings](https://github.com/settings/personal-access-tokens/new)**
 
 2. Configure:
-   - **Note**: `BandLab Upptime Monitor`
-   - **Expiration**: 90 days (recommended) or custom
-   - **Scopes**: Check ONLY:
-     - ☑️ `repo`
-     - ☑️ `workflow`
+   - **Token name**: `BandLab Upptime Monitor`
+   - **Expiration**: 90 days (recommended)
+   - **Resource owner**: `bandlab`
+   - **Repository access**: "Only select repositories" → `bandlab-upptime`
 
-3. Click **Generate token**
+3. Set **Permissions**:
+   - **Repository permissions**:
+     - Actions: Read and write
+     - Contents: Read and write
+     - Issues: Read and write
+     - Metadata: Read (auto-selected)
+     - Workflows: Read and write
 
-4. **Copy the token immediately** (it won't be shown again)
+4. Click **Generate token**
+
+5. **Copy the token immediately** (it won't be shown again)
 
 ## Setting the Secret
 
@@ -55,9 +54,9 @@ The setup script will warn if your token has extra permissions.
 ```
 
 The script will:
-- Validate token format
-- Verify token has correct scopes
-- Warn about extra scopes
+- Detect token type (fine-grained or classic)
+- Validate token has correct permissions
+- Test repository access
 - Set the `GH_PAT` secret
 - Trigger a test workflow
 
@@ -71,9 +70,9 @@ gh secret set GH_PAT -R bandlab/bandlab-upptime
 
 Tokens should be rotated before expiration:
 
-1. Generate a new token with the same scopes
+1. Generate a new token with the same permissions
 2. Run `./scripts/setup-upptime.sh` to update
-3. Delete the old token from [GitHub Token Settings](https://github.com/settings/tokens)
+3. Delete the old token from [Token Settings](https://github.com/settings/tokens?type=beta)
 
 ## Troubleshooting
 
@@ -82,12 +81,20 @@ Tokens should be rotated before expiration:
 - Generate a new token and update the secret
 
 ### "Resource not accessible" error
-- Token is missing required scopes
-- Regenerate with both `repo` and `workflow` checked
+- Token is missing required permissions
+- Regenerate with all required permissions (Actions, Contents, Issues, Metadata, Workflows)
 
-### Fine-grained token error
-- Upptime requires Classic tokens
-- Generate a new Classic token at https://github.com/settings/tokens/new
+### Permission test failures
+- Ensure the token has "Read and write" access for Contents, Issues, Actions, and Workflows
+- Metadata should be "Read" access
+
+## Classic Tokens (Alternative)
+
+If you prefer classic tokens, they also work:
+
+1. Go to https://github.com/settings/tokens/new
+2. Select scopes: `repo` and `workflow`
+3. The script will accept classic tokens but recommend fine-grained
 
 ## Verification
 
