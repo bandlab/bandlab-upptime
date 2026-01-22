@@ -155,18 +155,18 @@ check_existing_record() {
             if ! prompt_yn "  Update anyway?" "n"; then
                 exit 0
             fi
+            RECORD_ACTION="UPSERT"
         else
             warn "Record points to a different target."
             if ! prompt_yn "  Replace with ${GITHUB_PAGES_TARGET}?" "y"; then
                 echo "  Aborted."
                 exit 0
             fi
+            RECORD_ACTION="UPSERT"
         fi
-        
-        RECORD_ACTION="UPSERT"
     else
-        info "No existing record found. Will create new CNAME."
-        RECORD_ACTION="UPSERT"
+        info "No existing record found. Will create new CNAME (using CREATE for safety)."
+        RECORD_ACTION="CREATE"
     fi
 }
 
