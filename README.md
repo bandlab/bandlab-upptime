@@ -9,7 +9,7 @@ Automated uptime monitoring for BandLab services using [Upptime](https://upptime
 🟢 **All systems operational** (auto-updated by Upptime workflows)
 
 | Service | Status | Uptime | Response Time |
-|---------|--------|--------|---------------|
+| ------- | ------ | ------ | ------------- |
 | BandLab | Up     | 99.95% | ~1100ms       |
 
 **Live status page:** https://upptime.bandlab.com
@@ -23,6 +23,7 @@ Automated uptime monitoring for BandLab services using [Upptime](https://upptime
 **When to run:** Initial setup or when reconfiguring the monitoring system.
 
 Automates the manual configuration steps:
+
 1. Configure incident assignees in `.upptimerc.yml`
 2. Set up the `GH_PAT` repository secret (with permission validation)
 3. Enable GitHub Pages for the status website
@@ -33,6 +34,7 @@ Automates the manual configuration steps:
 ```
 
 **Prerequisites:**
+
 - GitHub CLI (`gh`) installed and authenticated
 - `yq`, `jq`, `curl` installed
 
@@ -49,6 +51,7 @@ Configures AWS Route 53 DNS to point `upptime.bandlab.com` to GitHub Pages.
 ```
 
 **What it does:**
+
 1. Validates AWS CLI credentials
 2. Finds the `bandlab.com` hosted zone
 3. Creates/updates CNAME record → `bandlab.github.io`
@@ -56,6 +59,7 @@ Configures AWS Route 53 DNS to point `upptime.bandlab.com` to GitHub Pages.
 5. Configures GitHub Pages custom domain
 
 **Prerequisites:**
+
 - AWS CLI installed and configured
 - Permissions: `route53:ListHostedZones`, `route53:ChangeResourceRecordSets`
 
@@ -73,25 +77,27 @@ Fine-grained tokens allow scoping to a single repository with specific permissio
 
 ### Required Permissions
 
-| Permission | Access Level | Why Required |
-|------------|--------------|--------------|
-| **Actions** | Read and write | Trigger and manage workflow runs |
-| **Contents** | Read and write | Update status files, graphs, API data |
-| **Issues** | Read and write | Create incident issues when sites go down |
-| **Metadata** | Read | Required for repository access (auto-selected) |
-| **Workflows** | Read and write | Update workflow files when Upptime updates |
+| Permission    | Access Level   | Why Required                                   |
+| ------------- | -------------- | ---------------------------------------------- |
+| **Actions**   | Read and write | Trigger and manage workflow runs               |
+| **Contents**  | Read and write | Update status files, graphs, API data          |
+| **Issues**    | Read and write | Create incident issues when sites go down      |
+| **Metadata**  | Read           | Required for repository access (auto-selected) |
+| **Workflows** | Read and write | Update workflow files when Upptime updates     |
 
 ### Generating the Token
 
 1. Go to **[Fine-grained Token Settings](https://github.com/settings/personal-access-tokens/new)**
 
 2. Configure:
+
    - **Token name**: `BandLab Upptime Monitor`
    - **Expiration**: 90 days (recommended)
    - **Resource owner**: `bandlab`
    - **Repository access**: "Only select repositories" → `bandlab-upptime`
 
 3. Set **Permissions** (Repository permissions):
+
    - Actions: Read and write
    - Contents: Read and write
    - Issues: Read and write
@@ -105,11 +111,13 @@ Fine-grained tokens allow scoping to a single repository with specific permissio
 ### Setting the Secret
 
 **Using the setup script (recommended):**
+
 ```bash
 ./scripts/setup-upptime.sh
 ```
 
 The script will:
+
 - Detect token type (fine-grained or classic)
 - Validate token has correct permissions
 - Test repository access
@@ -117,6 +125,7 @@ The script will:
 - Trigger a test workflow
 
 **Manual setup:**
+
 ```bash
 gh secret set GH_PAT -R bandlab/bandlab-upptime
 # Paste your token when prompted
@@ -140,11 +149,11 @@ If you prefer classic tokens, they also work:
 
 ### Troubleshooting
 
-| Error | Solution |
-|-------|----------|
-| "Bad credentials" | Token is invalid, expired, or revoked. Generate a new token. |
+| Error                     | Solution                                                             |
+| ------------------------- | -------------------------------------------------------------------- |
+| "Bad credentials"         | Token is invalid, expired, or revoked. Generate a new token.         |
 | "Resource not accessible" | Token missing permissions. Regenerate with all required permissions. |
-| Permission test failures | Ensure "Read and write" for Contents, Issues, Actions, Workflows. |
+| Permission test failures  | Ensure "Read and write" for Contents, Issues, Actions, Workflows.    |
 
 ### Verification
 
@@ -163,6 +172,7 @@ gh workflow run setup.yml -R bandlab/bandlab-upptime
 ## Configuration
 
 The monitoring configuration is in [.upptimerc.yml](.upptimerc.yml):
+
 - Sites to monitor
 - Check frequency
 - Status page customization
