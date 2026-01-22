@@ -16,8 +16,7 @@ sites:
   #   icon: https://example.com/favicon.ico
 
 assignees:
-  - [ADD_GITHUB_USERNAME] # Replace with actual GitHub usernames
-
+  - ebashmakov
 status-website:
   name: BandLab System Status
   logoUrl: https://www.bandlab.com/favicon.ico
