@@ -46,6 +46,28 @@ prompt_yn() {
     [[ "${answer,,}" == "y" ]]
 }
 
+# Execute AWS CLI command with preview and confirmation
+# Usage: aws_cmd [--no-confirm] <aws args...>
+aws_cmd() {
+    local no_confirm=false
+    if [[ "${1:-}" == "--no-confirm" ]]; then
+        no_confirm=true
+        shift
+    fi
+    
+    echo
+    echo -e "${YELLOW}▶ aws $*${NC}"
+    
+    if [[ "$no_confirm" == "false" ]]; then
+        if ! prompt_yn "  Execute this command?" "y"; then
+            echo "  Skipped."
+            return 1
+        fi
+    fi
+    
+    aws "$@"
+}
+
 # Check prerequisites
 check_prerequisites() {
     info "Checking prerequisites..."
@@ -58,7 +80,10 @@ check_prerequisites() {
     fi
     
     # Check AWS credentials
-    if ! aws sts get-caller-identity &> /dev/null; then
+    echo
+    echo -e "${YELLOW}▶ aws sts get-caller-identity${NC}"
+    local identity_result
+    if ! identity_result=$(aws sts get-caller-identity --output json 2>&1); then
         error "AWS CLI is not configured or credentials are invalid."
         echo "  Run: aws configure"
         echo "  Or set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables."
@@ -66,7 +91,7 @@ check_prerequisites() {
     fi
     
     local identity
-    identity=$(aws sts get-caller-identity --query 'Arn' --output text)
+    identity=$(echo "$identity_result" | jq -r '.Arn')
     success "AWS authenticated as: $identity"
     echo
 }
@@ -75,12 +100,17 @@ check_prerequisites() {
 find_hosted_zone() {
     info "Looking for hosted zone for ${DOMAIN}..."
     
+    echo
+    echo -e "${YELLOW}▶ aws route53 list-hosted-zones --query \"HostedZones[?Name=='${DOMAIN}.']\" --output json${NC}"
+    
     local zones
     zones=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='${DOMAIN}.']" --output json)
     
     if [[ "$zones" == "[]" ]]; then
         error "No hosted zone found for ${DOMAIN}"
         echo "  Available hosted zones:"
+        echo
+        echo -e "${YELLOW}▶ aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output table${NC}"
         aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output table
         exit 1
     fi
@@ -99,6 +129,9 @@ find_hosted_zone() {
 # Check if record already exists
 check_existing_record() {
     info "Checking for existing record: ${FULL_DOMAIN}..."
+    
+    echo
+    echo -e "${YELLOW}▶ aws route53 list-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --query \"ResourceRecordSets[?Name=='${FULL_DOMAIN}.']\" --output json${NC}"
     
     local existing
     existing=$(aws route53 list-resource-record-sets \
@@ -178,6 +211,19 @@ EOF
         exit 0
     fi
     
+    # Show the command
+    echo
+    echo -e "${YELLOW}▶ aws route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --change-batch '<change-batch-json>' --output json${NC}"
+    echo
+    echo "  Change batch JSON:"
+    echo "$change_batch" | sed 's/^/    /'
+    echo
+    
+    if ! prompt_yn "  Execute this command?" "y"; then
+        echo "  Aborted."
+        exit 0
+    fi
+    
     # Apply the change
     local result
     result=$(aws route53 change-resource-record-sets \
@@ -198,6 +244,9 @@ EOF
     if prompt_yn "  Wait for DNS propagation?" "y"; then
         info "Waiting for DNS change to propagate (this may take 30-60 seconds)..."
         
+        echo
+        echo -e "${YELLOW}▶ aws route53 wait resource-record-sets-changed --id $change_id${NC}"
+        
         aws route53 wait resource-record-sets-changed --id "$change_id"
         
         success "DNS change propagated!"
@@ -208,6 +257,9 @@ EOF
 verify_record() {
     echo
     info "Verifying DNS record..."
+    
+    echo
+    echo -e "${YELLOW}▶ aws route53 list-resource-record-sets --hosted-zone-id $HOSTED_ZONE_ID --query \"ResourceRecordSets[?Name=='${FULL_DOMAIN}.']\" --output json${NC}"
     
     local result
     result=$(aws route53 list-resource-record-sets \
