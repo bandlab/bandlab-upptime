@@ -15,16 +15,9 @@ jobs:
       contents: write # required to push to gh-pages
     steps:
       - uses: actions/checkout@v3
-      - name: Build status page
+      - name: Build and deploy status page
         uses: upptime/uptime-monitor@master
         with:
           command: site
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-      - name: Deploy status page
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          publish_branch: gh-pages
-          publish_dir: site/__sapper__/export
-          cname: upptime.bandlab.com
