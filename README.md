@@ -105,7 +105,7 @@ sites:
     slug: bandlab
     maxResponseTime: 5000
     icon: https://www.bandlab.com/favicon.ico
-  
+
   # Add new site
   - name: BandLab API
     url: https://api.bandlab.com/health
@@ -187,12 +187,14 @@ Configures AWS Route 53 DNS to point `upptime.bandlab.com` to GitHub Pages.
 1. Go to **[Fine-grained Token Settings](https://github.com/settings/personal-access-tokens/new)**
 
 2. Configure:
+
    - **Token name**: `BandLab Upptime Monitor`
    - **Expiration**: 90 days (recommended)
    - **Resource owner**: `bandlab`
    - **Repository access**: "Only select repositories" → `bandlab-upptime`
 
 3. Set **Repository permissions**:
+
    - Actions: Read and write
    - Contents: Read and write
    - Issues: Read and write
@@ -257,6 +259,7 @@ sites:
 ```
 
 **Options:**
+
 - `name` - Display name for the site
 - `url` - URL to monitor
 - `slug` - Unique identifier for API endpoints
@@ -295,9 +298,9 @@ When sites go down, GitHub issues are created and assigned to these users.
 
 ```yaml
 workflowSchedule:
-  uptime: "*/5 * * * *"  # Check every 5 minutes
-  responseTime: "0 23 * * *"  # Generate graphs daily
-  staticSite: "0 1 * * *"  # Update status website daily
+  uptime: "*/5 * * * *" # Check every 5 minutes
+  responseTime: "0 23 * * *" # Generate graphs daily
+  staticSite: "0 1 * * *" # Update status website daily
 ```
 
 ---
@@ -309,6 +312,7 @@ workflowSchedule:
 Represents a URL endpoint being monitored.
 
 **Attributes:**
+
 - `name` - Human-readable identifier
 - `url` - Target URL to monitor
 - `slug` - Unique identifier for file naming
@@ -322,6 +326,7 @@ Represents a URL endpoint being monitored.
 Individual monitoring attempt recording health and performance.
 
 **Attributes:**
+
 - `timestamp` - ISO 8601 timestamp
 - `status` - Check result (up, down, degraded)
 - `responseTime` - Response time in milliseconds
@@ -331,6 +336,7 @@ Individual monitoring attempt recording health and performance.
 **Storage:** `history/{slug}.yml`
 
 **Example:**
+
 ```yaml
 - date: "2026-01-22T15:00:00.000Z"
   status: "up"
@@ -343,6 +349,7 @@ Individual monitoring attempt recording health and performance.
 Period of service unavailability or degradation.
 
 **Attributes:**
+
 - `incidentId` - GitHub issue number
 - `startTime` - Incident start timestamp
 - `endTime` - Incident resolution timestamp
@@ -354,6 +361,7 @@ Period of service unavailability or degradation.
 **Storage:** GitHub Issues
 
 **Lifecycle:**
+
 1. **Open** - Incident detected, issue created
 2. **Investigating** - Team members adding updates
 3. **Resolved** - Service restored, issue auto-closed
@@ -364,6 +372,7 @@ Period of service unavailability or degradation.
 Calculated availability statistics over time periods.
 
 **Attributes:**
+
 - `uptimePercentage` - Calculated uptime % (24h, 7d, 30d, 90d)
 - `averageResponseTime` - Mean response time per period
 - `totalChecks` - Number of checks in period
@@ -372,6 +381,7 @@ Calculated availability statistics over time periods.
 **Storage:** `api/{slug}/uptime.json`
 
 **Example:**
+
 ```json
 {
   "uptimeDay": 100.0,
@@ -390,16 +400,19 @@ Calculated availability statistics over time periods.
 ### Data Flow Architecture
 
 #### 1. Monitoring Workflow (Every 5 minutes)
+
 ```
 GitHub Actions Trigger → HTTP Request → Record Result → Update History → Generate API → Update Status Page
 ```
 
 #### 2. Incident Workflow
+
 ```
 Failed Check → Validate Failure → Create GitHub Issue → Notify Assignees → Auto-close on Recovery
 ```
 
 #### 3. Metrics Calculation (Daily)
+
 ```
 Historical Data → Calculate Statistics → Update API Endpoints → Generate Graphs → Update Status Page
 ```
@@ -429,6 +442,7 @@ All APIs are auto-generated, read-only, and publicly accessible via GitHub Pages
 Returns current uptime statistics for a specific site.
 
 **Response:**
+
 ```json
 {
   "uptimeDay": 100.0,
@@ -449,6 +463,7 @@ Returns current uptime statistics for a specific site.
 Returns historical monitoring check data.
 
 **Response:**
+
 ```json
 [
   {
@@ -465,6 +480,7 @@ Returns historical monitoring check data.
 Returns aggregated status for all monitored sites.
 
 **Response:**
+
 ```json
 {
   "status": "up",
@@ -490,13 +506,17 @@ Returns aggregated status for all monitored sites.
 ### Usage Examples
 
 **JavaScript:**
+
 ```javascript
-const response = await fetch('https://upptime.bandlab.com/api/bandlab/uptime.json');
+const response = await fetch(
+  "https://upptime.bandlab.com/api/bandlab/uptime.json"
+);
 const data = await response.json();
 console.log(`BandLab uptime: ${data.uptimeDay}%`);
 ```
 
 **Python:**
+
 ```python
 import requests
 response = requests.get('https://upptime.bandlab.com/api/summary.json')
@@ -505,6 +525,7 @@ print(f"System status: {data['status']}")
 ```
 
 **curl:**
+
 ```bash
 curl https://upptime.bandlab.com/api/bandlab/uptime.json
 ```
@@ -565,21 +586,25 @@ README.md                  # Auto-updated status (this file)
 ### Workflows
 
 #### Uptime CI (`uptime.yml`)
+
 - **Schedule**: Every 5 minutes
 - **Purpose**: Monitor all sites, record results, create/close incidents
 - **Triggers**: Schedule, manual dispatch
 
 #### Site CI (`site.yml`)
+
 - **Schedule**: Daily at 1 AM
 - **Purpose**: Generate and deploy status website
 - **Output**: GitHub Pages deployment
 
 #### Response Time (`response-time.yml`)
+
 - **Schedule**: Daily at 11 PM
 - **Purpose**: Calculate and update response time metrics
 - **Output**: Updated API endpoints
 
 #### Graphs CI (`graphs.yml`)
+
 - **Schedule**: Daily
 - **Purpose**: Generate response time trend graphs
 - **Output**: PNG graphs in `graphs/` directory
@@ -610,6 +635,7 @@ README.md                  # Auto-updated status (this file)
 The `update-template.yml` workflow automatically checks for Upptime updates.
 
 Manual update:
+
 ```bash
 # Merge latest from Upptime template
 git remote add upptime https://github.com/upptime/upptime
@@ -628,6 +654,7 @@ git merge upptime/master
 **Symptom:** Monitoring checks not happening every 5 minutes
 
 **Solutions:**
+
 - Verify GitHub Actions are enabled in repository settings
 - Check `GH_PAT` secret is set correctly
 - Ensure token hasn't expired
@@ -638,6 +665,7 @@ git merge upptime/master
 **Symptom:** Status page shows stale data
 
 **Solutions:**
+
 - Check GitHub Pages is enabled (`gh-pages` branch)
 - Verify Site CI workflow runs successfully
 - Check DNS configuration for custom domain
@@ -648,6 +676,7 @@ git merge upptime/master
 **Symptom:** Sites go down but no GitHub issues are created
 
 **Solutions:**
+
 - Verify PAT has Issues read/write permissions
 - Check assignees are configured in `.upptimerc.yml`
 - Ensure site has been down for >1 check (2 failures required)
@@ -657,6 +686,7 @@ git merge upptime/master
 **Symptom:** `/api/*` endpoints not accessible
 
 **Solutions:**
+
 - Wait for initial setup workflow completion
 - Check `gh-pages` branch contains `api/` directory
 - Verify GitHub Pages is deployed from `gh-pages` branch
@@ -666,6 +696,7 @@ git merge upptime/master
 **Symptom:** `upptime.bandlab.com` not accessible
 
 **Solutions:**
+
 - Run `./scripts/configure-dns.sh` to verify DNS setup
 - Check Route 53 CNAME record exists and points to `bandlab.github.io`
 - Wait for DNS propagation (up to 48 hours, usually <10 minutes)
