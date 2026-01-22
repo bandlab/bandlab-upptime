@@ -10,7 +10,7 @@ Automated uptime monitoring for BandLab services using [Upptime](https://upptime
 
 | Service | Status | Uptime | Response Time |
 |---------|--------|--------|---------------|
-| BandLab | Up | 99.95% | ~1100ms |
+| BandLab | Up     | 99.95% | ~1100ms       |
 
 **Live status page:** https://upptime.bandlab.com
 
