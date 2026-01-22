@@ -1,0 +1,20 @@
+[
+  {
+    "name": "BandLab",
+    "url": "https://www.bandlab.com",
+    "icon": "https://www.bandlab.com/favicon.ico",
+    "slug": "bandlab",
+    "status": "up",
+    "uptime": "100.00%",
+    "uptimeDay": "100.00%",
+    "uptimeWeek": "100.00%",
+    "uptimeMonth": "100.00%",
+    "uptimeYear": "100.00%",
+    "time": 146,
+    "timeDay": 146,
+    "timeWeek": 146,
+    "timeMonth": 146,
+    "timeYear": 146,
+    "dailyMinutesDown": {}
+  }
+]
