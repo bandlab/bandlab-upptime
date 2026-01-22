@@ -244,9 +244,10 @@ configure_github_pages() {
     
     # Check current GitHub Pages configuration
     local pages_info
-    pages_info=$(gh api "repos/${OWNER}/${REPO}/pages" 2>/dev/null || echo "NOT_CONFIGURED")
+    local pages_status
+    pages_info=$(gh api "repos/${OWNER}/${REPO}/pages" 2>&1) && pages_status=0 || pages_status=$?
     
-    if [[ "$pages_info" != "NOT_CONFIGURED" ]]; then
+    if [[ $pages_status -eq 0 ]] && echo "$pages_info" | jq -e '.source.branch' &>/dev/null; then
         local current_source
         current_source=$(echo "$pages_info" | jq -r '.source.branch // "unknown"')
         success "GitHub Pages already enabled (source: $current_source branch)."
