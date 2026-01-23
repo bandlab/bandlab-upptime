@@ -3,6 +3,7 @@ owner: bandlab
 repo: bandlab-upptime
 user-agent: BandLab-Upptime
 
+# Monitoring targets
 sites:
   - name: BandLab
     url: https://www.bandlab.com
