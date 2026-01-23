@@ -32,10 +32,14 @@ status-website:
     - title: BandLab
       href: https://www.bandlab.com
 
+# Workflow schedules (cron syntax)
+# Note: GitHub Actions scheduled workflows cannot run faster than every 5 minutes
 workflowSchedule:
-  uptime: "*/5 * * * *"
-  responseTime: "0 23 * * *"
-  staticSite: "0 1 * * *"
+  uptime: "*/5 * * * *"       # Check endpoint status every 5 minutes
+  responseTime: "0 23 * * *"  # Record response times daily at 11 PM UTC
+  staticSite: "0 1 * * *"     # Rebuild status website daily at 1 AM UTC
+  graphs: "0 0 * * *"         # Generate response time graphs daily at midnight UTC
+  summary: "0 0 * * *"        # Update README status summary daily at midnight UTC
 
 notifications:
   slack:
