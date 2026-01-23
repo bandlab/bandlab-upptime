@@ -17,6 +17,7 @@ sites:
 
 assignees:
   - ebashmakov
+
 status-website:
   name: BandLab Status
   logoUrl: https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png
@@ -30,9 +31,6 @@ status-website:
     - title: BandLab
       href: https://www.bandlab.com
 
-# To further customize theme, logo, and intro text, see Upptime docs:
-# https://upptime.js.org/docs/status-website/
-
 workflowSchedule:
   uptime: "*/5 * * * *"
   responseTime: "0 23 * * *"
@@ -44,4 +42,3 @@ workflowSchedule:
 #   email:
 #     to: team@bandlab.com
 #     from: status@bandlab.com
-

@@ -2,7 +2,7 @@
   {
     "name": "BandLab",
     "url": "https://www.bandlab.com",
-    "icon": "https://www.bandlab.com/favicon.ico",
+    "icon": "https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png",
     "slug": "bandlab",
     "status": "up",
     "uptime": "100.00%",
@@ -10,11 +10,29 @@
     "uptimeWeek": "100.00%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 146,
-    "timeDay": 146,
-    "timeWeek": 146,
-    "timeMonth": 146,
-    "timeYear": 146,
+    "time": 109,
+    "timeDay": 109,
+    "timeWeek": 109,
+    "timeMonth": 109,
+    "timeYear": 109,
+    "dailyMinutesDown": {}
+  },
+  {
+    "name": "BandLab Bandlab Page",
+    "url": "https://www.bandlab.com/bandlab",
+    "icon": "https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png",
+    "slug": "bandlab-user-page",
+    "status": "up",
+    "uptime": "100.00%",
+    "uptimeDay": "100.00%",
+    "uptimeWeek": "100.00%",
+    "uptimeMonth": "100.00%",
+    "uptimeYear": "100.00%",
+    "time": 14,
+    "timeDay": 14,
+    "timeWeek": 14,
+    "timeMonth": 14,
+    "timeYear": 14,
     "dailyMinutesDown": {}
   }
 ]
