@@ -33,13 +33,21 @@ status-website:
       href: https://www.bandlab.com
 
 # Workflow schedules (cron syntax)
-# Note: GitHub Actions scheduled workflows cannot run faster than every 5 minutes
+# GitHub Actions cannot run faster than every 5 minutes
+#
+# Data flow (sequenced to avoid race conditions):
+#   1. uptime       → Checks status & collects response times (every 5 min)
+#   2. responseTime → Aggregates response time data into summaries
+#   3. graphs       → Generates PNG charts from aggregated data
+#   4. summary      → Updates README.md with latest stats
+#   5. staticSite   → Rebuilds status website with all updates
+#
 workflowSchedule:
-  uptime: "*/5 * * * *"       # Check endpoint status every 5 minutes
-  responseTime: "0 23 * * *"  # Record response times daily at 11 PM UTC
-  staticSite: "0 1 * * *"     # Rebuild status website daily at 1 AM UTC
-  graphs: "0 0 * * *"         # Generate response time graphs daily at midnight UTC
-  summary: "0 0 * * *"        # Update README status summary daily at midnight UTC
+  uptime: "*/5 * * * *"       # Every 5 min - core monitoring (collects response times)
+  responseTime: "0 23 * * *"  # 11:00 PM UTC - aggregate response time data
+  graphs: "15 23 * * *"       # 11:15 PM UTC - generate charts (after responseTime)
+  summary: "30 23 * * *"      # 11:30 PM UTC - update README (after graphs)
+  staticSite: "0 0 * * *"     # 12:00 AM UTC - rebuild site (after all updates)
 
 notifications:
   slack:
