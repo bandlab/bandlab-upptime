@@ -37,9 +37,6 @@ workflowSchedule:
   responseTime: "0 23 * * *"
   staticSite: "0 1 * * *"
 
-# notifications:
-#   slack:
-#     webhookUrl: ${{ secrets.SLACK_WEBHOOK_URL }}
-#   email:
-#     to: team@bandlab.com
-#     from: status@bandlab.com
+notifications:
+  slack:
+    webhookUrl: ${{ secrets.SLACK_WEBHOOK_URL }}
