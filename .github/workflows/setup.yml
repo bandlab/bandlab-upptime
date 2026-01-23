@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - master
-      - 001-use-upptime-https
   workflow_dispatch:
 jobs:
   setup:

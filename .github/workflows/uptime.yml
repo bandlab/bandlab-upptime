@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - master
-      - 001-use-upptime-https
 jobs:
   check-uptime:
     runs-on: ubuntu-latest
