@@ -1,0 +1,17 @@
+# Upptime Summary Workflow
+name: Summary CI
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  update-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update summary
+        uses: upptime/uptime-monitor@master
+        with:
+          command: summary
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}

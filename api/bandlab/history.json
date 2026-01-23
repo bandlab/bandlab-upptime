@@ -1,0 +1,14 @@
+[
+  {
+    "date": "2025-10-12T10:00:00.000Z",
+    "status": "up",
+    "code": 200,
+    "responseTime": 1234
+  },
+  {
+    "date": "2025-10-12T10:05:00.000Z",
+    "status": "up",
+    "code": 200,
+    "responseTime": 1200
+  }
+]

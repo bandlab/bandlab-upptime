@@ -1,0 +1,12 @@
+{
+  "services": [
+    {
+      "name": "BandLab.com",
+      "url": "https://www.bandlab.com",
+      "status": "up",
+      "lastChecked": "2025-10-12T11:15:00.000Z",
+      "responseTime": 1100
+    }
+  ],
+  "lastUpdate": "2025-10-12T11:15:00.000Z"
+}

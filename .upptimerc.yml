@@ -1,0 +1,45 @@
+# Upptime configuration for BandLab Upptime Monitoring System
+owner: bandlab
+repo: bandlab-upptime
+user-agent: BandLab-Upptime
+
+# Monitoring targets
+sites:
+  - name: BandLab
+    url: https://www.bandlab.com
+    slug: bandlab
+    maxResponseTime: 5000
+    icon: https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png
+  - name: BandLab User Page
+    url: https://www.bandlab.com/bandlab
+    slug: bandlab-user-page
+    maxResponseTime: 2000
+    icon: https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png
+
+assignees:
+  - ebashmakov
+
+status-website:
+  name: BandLab Status
+  logoUrl: https://www.bandlab.com/web-app/images/favicons/favicon-48x48-53ec365b4b.png
+  cname: upptime.bandlab.com
+  introTitle: "**BandLab** availability monitoring"
+  robotsText: "User-agent: * \n Disallow: /"
+  theme: light
+  navbar:
+    - title: Status
+      href: /
+    - title: BandLab
+      href: https://www.bandlab.com
+
+workflowSchedule:
+  uptime: "*/5 * * * *"
+  responseTime: "0 23 * * *"
+  staticSite: "0 1 * * *"
+
+# notifications:
+#   slack:
+#     webhookUrl: ${{ secrets.SLACK_WEBHOOK_URL }}
+#   email:
+#     to: team@bandlab.com
+#     from: status@bandlab.com

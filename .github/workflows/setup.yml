@@ -1,0 +1,21 @@
+# Upptime Setup Workflow
+name: Setup CI
+permissions:
+  contents: write
+on:
+  push:
+    branches:
+      - master
+      - 001-use-upptime-https
+  workflow_dispatch:
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup repository
+        uses: upptime/uptime-monitor@master
+        with:
+          command: readme
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}

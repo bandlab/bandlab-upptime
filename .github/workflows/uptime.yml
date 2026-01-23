@@ -1,0 +1,24 @@
+# Upptime core monitoring workflow
+name: Uptime CI
+permissions:
+  contents: write
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - 001-use-upptime-https
+jobs:
+  check-uptime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Run Upptime uptime check
+        uses: upptime/uptime-monitor@v1.40.1
+        with:
+          command: uptime
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
