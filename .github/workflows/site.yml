@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build status page
-        uses: upptime/uptime-monitor@master
+        uses: upptime/uptime-monitor@v1.40.1
         with:
           command: site
         env:
